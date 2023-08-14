@@ -18,23 +18,41 @@ class CaixaDaLanchonete {
             return "Não há itens no carrinho de compra!";
         }
 
-        let valorTotal = 0;
+        const pagamentosAceitos = [
+            "credito",
+            "debito",
+            "dinheiro"
+        ]
 
-        itens.map((item) => {
+        let valorTotal = 0;
+        let resultado;
+
+        itens.forEach((item) => {
             const separado = item.split(',');
             const [codigo, qtd] = separado;
 
             let produto = cardapio.find(item => {
-                if (codigo == item.codigo) {
-                    return item;
-                }
+                return codigo == item.codigo
             })
 
-            valorTotal += produto?.valor * qtd;
+            if (separado.length < 2 || !produto) {
+                resultado = "Item inválido!";
+            } else if (qtd == 0) {
+                resultado = "Quantidade inválida!";
+            } else if (!(pagamentosAceitos.includes(metodoDePagamento))){
+                resultado = "Forma de pagamento inválida!";
+            } else {
+                valorTotal += produto?.valor * qtd;
+                resultado = valorTotal;
+            }
         })
 
-        let valorFinal = this.aplicarAjusteDeValor(metodoDePagamento, valorTotal)
-        return "R$ " + valorFinal.toFixed(2).replace(".", ",")
+        if (typeof resultado == "string") {
+            return resultado
+        } else {
+            let valorFinal = this.aplicarAjusteDeValor(metodoDePagamento, valorTotal)
+            return "R$ " + valorFinal.toFixed(2).replace(".", ",")
+        }
     }
 }
 export { CaixaDaLanchonete };
