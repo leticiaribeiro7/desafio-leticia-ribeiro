@@ -2,57 +2,57 @@ import cardapio from "./cardapio.js";
 
 class CaixaDaLanchonete {
 
-    aplicarAjusteDeValor(metodoDePagamento, valorTotal) {
-        if (metodoDePagamento === 'credito') {
-            return valorTotal += (valorTotal*0.03)
-        } else if (metodoDePagamento === 'dinheiro') {
-            return valorTotal -= (valorTotal*0.05)
-        } else {
-            return valorTotal
+    validarCondicoes(campo) {
+        const messages = {
+            carrinhoVazio: "Não há itens no carrinho de compra!",
+            itemInvalido: "Item inválido!",
+            quantidadeInvalida: "Quantidade inválida!",
+            pagamentoInvalido: "Forma de pagamento inválida!",
+            itemExtra: "Item extra não pode ser pedido sem o principal"
         }
+        return messages[campo]
+    }
+    
+    aplicarAjusteDeValor(metodoDePagamento, valorTotal) {
+        return metodoDePagamento === 'credito' ? valorTotal += (valorTotal*0.03) 
+            : metodoDePagamento === 'dinheiro' ? valorTotal -= (valorTotal*0.05) 
+            : valorTotal
     }
 
     calcularValorDaCompra(metodoDePagamento, itens) {
         
-        if (itens.length === 0) {
-            return "Não há itens no carrinho de compra!";
-        }
+        if (!itens.length) return this.validarCondicoes("carrinhoVazio")
 
-        const pagamentosAceitos = [
-            "credito",
-            "debito",
-            "dinheiro"
-        ]
-
+        const pagamentosAceitos = ["credito", "debito", "dinheiro"]
         let valorTotal = 0;
-        let resultado;
+        let message = "";
 
         itens.forEach((item) => {
-            const separado = item.split(',');
-            const [codigo, qtd] = separado;
-
+            const pedido = item.split(',');
+            const [codigo, qtd] = pedido;
+            
             let produto = cardapio.find(item => {
                 return codigo == item.codigo
             })
 
-            if (separado.length < 2 || !produto) {
-                resultado = "Item inválido!";
+            if (pedido.length < 2 || !produto) {
+                message = this.validarCondicoes("itemInvalido")
             } else if (qtd == 0) {
-                resultado = "Quantidade inválida!";
+                message = this.validarCondicoes("quantidadeInvalida")
             } else if (!(pagamentosAceitos.includes(metodoDePagamento))){
-                resultado = "Forma de pagamento inválida!";
+                message = this.validarCondicoes("pagamentoInvalido")
+            } else if (produto.codigoPrincipal &&
+                       itens.findIndex(item => item.includes(produto.codigoPrincipal)) == -1) {
+                message = this.validarCondicoes("itemExtra")  
             } else {
                 valorTotal += produto?.valor * qtd;
-                resultado = valorTotal;
             }
         })
 
-        if (typeof resultado == "string") {
-            return resultado
-        } else {
-            let valorFinal = this.aplicarAjusteDeValor(metodoDePagamento, valorTotal)
-            return "R$ " + valorFinal.toFixed(2).replace(".", ",")
-        }
+        if (message) return message;
+            
+        let valorFinal = this.aplicarAjusteDeValor(metodoDePagamento, valorTotal)
+        return "R$ " + valorFinal.toFixed(2).replace(".", ",")
     }
 }
 export { CaixaDaLanchonete };
