@@ -5,19 +5,21 @@ class CaixaDaLanchonete {
     validarCondicoes(pedido, produto, qtd, pagamentosAceitos, metodoDePagamento, itens) {
         const conditions = [
             { 
-				check: pedido.length < 2 || !produto,
-				errorMessage: "Item inválido!" 
-			},
+		check: pedido.length < 2 || !produto,
+		errorMessage: "Item inválido!" 
+	    },
             { 
-				check: qtd == 0,
-				errorMessage: "Quantidade inválida!" },
+		check: qtd == 0,
+		errorMessage: "Quantidade inválida!"
+	    },
             { 
-				check: !pagamentosAceitos.includes(metodoDePagamento), 
-				errorMessage: "Forma de pagamento inválida!" },
+		check: !pagamentosAceitos.includes(metodoDePagamento), 
+		errorMessage: "Forma de pagamento inválida!" 
+	    },
             {
-				check: produto?.codigoPrincipal && itens.findIndex(item => item.includes(produto?.codigoPrincipal)) === -1,
-				errorMessage: "Item extra não pode ser pedido sem o principal" 
-			}
+		check: produto?.codigoPrincipal && itens.findIndex(item => item.includes(produto?.codigoPrincipal)) === -1,
+		errorMessage: "Item extra não pode ser pedido sem o principal" 
+	    }
         ];
 
         for (const condition of conditions) {
