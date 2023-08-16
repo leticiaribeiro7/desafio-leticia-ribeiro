@@ -2,17 +2,23 @@ import cardapio from "./cardapio.js";
 
 class CaixaDaLanchonete {
 
-    validarCondicoes(campo) {
-        const messages = {
-            carrinhoVazio: "Não há itens no carrinho de compra!",
-            itemInvalido: "Item inválido!",
-            quantidadeInvalida: "Quantidade inválida!",
-            pagamentoInvalido: "Forma de pagamento inválida!",
-            itemExtra: "Item extra não pode ser pedido sem o principal"
+    validarCondicoes(pedido, produto, qtd, pagamentosAceitos, metodoDePagamento, itens) {
+        const conditions = [
+            { check: pedido.length < 2 || !produto, errorMessage: "Item inválido!" },
+            { check: qtd == 0, errorMessage: "Quantidade inválida!" },
+            { check: !pagamentosAceitos.includes(metodoDePagamento), errorMessage: "Forma de pagamento inválida!" },
+            { check: produto?.codigoPrincipal && itens.findIndex(item => item.includes(produto?.codigoPrincipal)) === -1, errorMessage: "Item extra não pode ser pedido sem o principal" }
+        ];
+
+        for (const condition of conditions) {
+            if (condition.check) {
+                return condition.errorMessage;
+            }
         }
-        return messages[campo]
+
+        return null; // Retorna nulo se todas as condições forem atendidas
     }
-    
+	
     aplicarAjusteDeValor(metodoDePagamento, valorTotal) {
         return metodoDePagamento === 'credito' ? valorTotal += (valorTotal*0.03) 
             : metodoDePagamento === 'dinheiro' ? valorTotal -= (valorTotal*0.05) 
@@ -21,38 +27,29 @@ class CaixaDaLanchonete {
 
     calcularValorDaCompra(metodoDePagamento, itens) {
         
-        if (!itens.length) return this.validarCondicoes("carrinhoVazio")
+        if (!itens.length) return "Não há itens no carrinho de compra!"
 
         const pagamentosAceitos = ["credito", "debito", "dinheiro"]
         let valorTotal = 0;
-        let message = "";
 
-        itens.forEach((item) => {
+        for (const item of itens) {
+			
             const pedido = item.split(',');
             const [codigo, qtd] = pedido;
-            
             let produto = cardapio.find(item => {
                 return codigo == item.codigo
             })
-
-            if (pedido.length < 2 || !produto) {
-                message = this.validarCondicoes("itemInvalido")
-            } else if (qtd == 0) {
-                message = this.validarCondicoes("quantidadeInvalida")
-            } else if (!(pagamentosAceitos.includes(metodoDePagamento))){
-                message = this.validarCondicoes("pagamentoInvalido")
-            } else if (produto.codigoPrincipal &&
-                       itens.findIndex(item => item.includes(produto.codigoPrincipal)) == -1) {
-                message = this.validarCondicoes("itemExtra")  
-            } else {
-                valorTotal += produto?.valor * qtd;
-            }
-        })
-
-        if (message) return message;
+			
+            let message = this.validarCondicoes(pedido, produto, qtd, pagamentosAceitos, metodoDePagamento, itens);
+            if (message) return message;
             
-        let valorFinal = this.aplicarAjusteDeValor(metodoDePagamento, valorTotal)
-        return "R$ " + valorFinal.toFixed(2).replace(".", ",")
+            valorTotal += produto?.valor * qtd;
+            
+        }
+		
+        const valorFinal = this.aplicarAjusteDeValor(metodoDePagamento, valorTotal)
+        return "R$ " + valorFinal.toFixed(2).replace(".", ",")  
     }
 }
+
 export { CaixaDaLanchonete };
